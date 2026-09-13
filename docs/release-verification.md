@@ -118,7 +118,7 @@ they are measurements for the stated runtime, not general estimates.
 
 | Date (UTC) | Commit / notebook blob | Executor | Path exercised | Wall | Outcome |
 |---|---|---|---|---|---|
-__LOCAL_ROW__
+| 2026-09-14 | notebook blob `eb1134387df9` (commit `e70f4aa`, generated at `9cf80dc`; `NOTEBOOK_SOURCE.repository_revision` = `9cf80dc…`) | Local Windows-venv harness (`run_nb_local.py`: nbclient 0.11.0, fresh `python3` kernel, `CUDA_VISIBLE_DEVICES=-1`, `DIMER_NOTEBOOK_CI_PREINSTALLED=1`), Python 3.12.10, torch 2.14.0+cu130, transformers 4.57.6 | Default synthetic path, all 8 code cells: pinned install skipped (pre-installed), `stage_missing_files` fetched all 8 manifest entries (990 MB, `pytorch_model.bin` included; `tf_model.h5` not fetched — scratch `weights/` holds only the manifest files) from the Hub cache at the pinned revision, `verify_snapshot` PASS (8 files), no further download in the log, three `caption` calls → `a red house with a tree and a ball`, `a beach scene with a sail and a sun`, `a red and yellow apple on a white background` (10 tokens each, none truncated, 0.27–0.50 s), keyword observations 8/9 hit (`orange` absent — the recorded miscount), `evaluation_report` `not-measurable` (no references, by design), scene digests `f217010b…` / `3069e785…` / `7aa6fe00…`, 5 outputs written | 101.8 s | PASS — pre-flight only; not promotion evidence |
 
 ### Manual clean-runtime evidence
 
