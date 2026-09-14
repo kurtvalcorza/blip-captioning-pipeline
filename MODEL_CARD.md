@@ -2,6 +2,7 @@
 license: bsd-3-clause
 model_card_spec: "1.1"
 pipeline_tag: image-to-text
+task: "Others - Image Captioning"
 base_model: Salesforce/blip-image-captioning-base
 date_published: "2022-12-12"
 date_published_source: "Hugging Face Hub repository creation date of the exact hosted checkpoint (`createdAt` 2022-12-12T15:19:02Z, https://huggingface.co/api/models/Salesforce/blip-image-captioning-base — the Transformers-format conversion); the BLIP paper and original checkpoints are from 2022-01 (arXiv:2201.12086), and the pinned revision is the Hub's `main` as of 2026-09-14"
