@@ -1,6 +1,6 @@
 # BLIP image-captioning-base image captioning pipeline
 
-DIMER inference wrapper for **BLIP fine-tuned on COCO Captions** (`Salesforce/blip-image-captioning-base`), Salesforce's ~247M-parameter vision-language model (ViT-B/16 image encoder at 384×384 and a BERT-style text decoder cross-attending to the image features) that describes an image in one generated English sentence, optionally continuing a prefix you supply — pinned to an immutable Hugging Face revision and loaded only from a digest-verified local snapshot. The pipeline accepts one image and an optional prefix, decodes greedily under a caller-owned token budget, and returns the caption string with a `truncated` flag; it returns no score and no location.
+DIMER inference and fine-tuning wrapper for **BLIP fine-tuned on COCO Captions** (`Salesforce/blip-image-captioning-base`), Salesforce's 224M-parameter vision-language model (ViT-B/16 image encoder at 384×384 and a BERT-style text decoder cross-attending to the image features) that describes an image in one generated English sentence, optionally continuing a prefix you supply — pinned to an immutable Hugging Face revision and loaded only from a digest-verified local snapshot. The pipeline accepts one image and an optional prefix, decodes greedily under a caller-owned token budget, and returns the caption string with a `truncated` flag; it returns no score and no location. It also carries a bounded adaptation contract: `adapt` fine-tunes the caption decoder's last blocks and head on a validated `{id, image, captions}` dataset, `evaluate` scores a held-out split with BLEU-4, ROUGE-L, CIDEr-D and unigram F1 beside two non-neural baselines, and `save_artifact` / `from_artifact` export and reload the trained tensors as a safetensors adapter bound to the pinned base.
 
 **Weight format.** Upstream hosts no SafeTensors at the pinned revision. This package executes the digest-pinned `pytorch_model.bin` (a pickle, deserialised with `weights_only=True` only after its SHA-256 matched the manifest); the `tf_model.h5` upstream also hosts is the DIMER upload artifact (DIMER does not accept `.bin`) and is never loaded here. Both digests are recorded in `docs/WEIGHTS.md` and `MODEL_CARD.md`.
 
@@ -10,7 +10,7 @@ DIMER inference wrapper for **BLIP fine-tuned on COCO Captions** (`Salesforce/bl
 - Revision: `82a37760796d32b1411fe092ab5d4e227313294b`
 - Upstream weight license: BSD-3-Clause
 - Upstream task: image captioning (COCO Captions)
-- Repository adaptation: **none**; inference only
+- Repository adaptation: bounded supervised fine-tuning of the caption decoder's last *k* blocks plus head transform and bias (`adapt`; the vision encoder, embeddings and tied output projection stay frozen); the tutorial's default corpus is VizWiz-Captions (`mm-eval/VizWiz-Captions` @ `c4a6d897836e7885d0095134f92d392e4e770539`, CC BY 4.0), read column-only plus one row group of photographs with per-file digests at run time
 
 ## Quick start
 
@@ -24,9 +24,20 @@ print(result["caption"], result["new_tokens"], result["truncated"])   # generate
 
 result = pipe.caption(Image.open("photo.jpg"), prefix="a photography of")   # conditional (upstream README example)
 print(keyword_hits(result["caption"], ["house", "tree"]))   # an observation, not a metric
+
+# Adaptation: records are {id, image, captions}; every image stays in one split
+from blip_captioning_pipeline import fetch_sample_dataset, constant_caption_baseline
+
+splits = fetch_sample_dataset()                          # pinned VizWiz-Captions sample, 208 / 40 / 70 by image
+print(constant_caption_baseline(splits["train"], splits["test"])["cider_d"])
+print(pipe.evaluate(splits["test"])["cider_d"])          # frozen model
+pipe.adapt(splits["train"], splits["validation"], epochs=4, lr=1e-5)   # last 2 decoder blocks + head
+print(pipe.evaluate(splits["test"])["cider_d"])          # adapted model, same held-out photographs
+pipe.save_artifact("outputs/adapter")                    # adapter.safetensors + manifest.json
+again = BlipCaptioningPipeline.from_artifact("outputs/adapter")
 ```
 
-Install into a Python 3.12 environment that already holds the pinned dependencies with `pip install -e . --no-deps`; run `pytest -q -o addopts= tests` for the offline test suite (no weights needed). On a fresh clone the manifest is committed but the weights are not: `BlipCaptioningPipeline.from_pretrained(allow_download=True)` fetches exactly the missing manifest-listed files at the pinned revision, then verifies them.
+Install into a Python 3.12 environment that already holds the pinned dependencies with `pip install -e . --no-deps`; run `pytest -q -o addopts= tests` for the offline test suite (36 tests, no weights needed; `tests/test_model_backed.py` adds 6 model-backed tests, one on CUDA, when the snapshot is staged). On a fresh clone the manifest is committed but the weights are not: `BlipCaptioningPipeline.from_pretrained(allow_download=True)` fetches exactly the missing manifest-listed files at the pinned revision, then verifies them.
 
 ## Weights layout
 
@@ -50,7 +61,7 @@ weights/blip-image-captioning-base/
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kurtvalcorza/blip-captioning-pipeline/blob/main/tutorials/blip_captioning_colab.ipynb)
 
-`tutorials/blip_captioning_colab.ipynb` is declared `TASK-INFERENCE` / `GUIDED` under DIMER Notebook Specification 2.0 and is **standalone** (§4): generated by `tools/build_notebook.py`, it carries the pipeline module, model identity, manifest digests and runtime pins, so the exported notebook runs without this repository (parity enforced by `tests/test_notebook_parity.py`). Its default `Run all` path draws three cartoon scenes in code (no download, no reference captions), surfaces the ceilings, exposes the caller-owned `max_new_tokens` and `caption_prefix` as form parameters, resolves the pinned model through the carried staging and verification path, validates the request through `validate_inputs` into an input manifest, captions through `BlipCaptioningPipeline.caption`, records keyword observations, writes an `evaluation_report` that is `not-measurable` (no references; `sample-sanity` with a bag-of-words `unigram_f1` only if you supply some — no COCO benchmark), and exports JSON, a captions CSV and an annotated contact sheet. BYOD (your own images) is optional and gated off by default. See `tutorials/README.md` for the registry and `docs/release-verification.md` for the release gate.
+`tutorials/blip_captioning_colab.ipynb` is declared `E2E` / `GUIDED` under DIMER Notebook Specification 2.0 and is **standalone** (§4): generated by `tools/build_notebook.py`, it carries the three pipeline modules (`pipeline.py`, `metrics.py`, `samples.py`), model identity, manifest digests and runtime pins, so the exported notebook runs without this repository (parity enforced by `tests/test_notebook_parity.py`). Its default `Run all` path resolves the pinned model through the carried staging and verification path (the 990 MB pickle re-hashed before `torch` is imported), reads the text columns of one pinned VizWiz-Captions shard column-only and the 336 photographs of its first row group in one digest-checked range read, validates and splits them by image (208 / 40 / 70), captions three cartoon scenes drawn in code through `validate_inputs` and `caption` with keyword observations, scores the frozen model on the test photographs beside the constant-caption and colour-nearest-neighbour baselines (BLEU-4, ROUGE-L, CIDEr-D, unigram F1, per `text` / `no-text` category), fine-tunes the caption decoder's last two blocks and head for four epochs with validation-CIDEr-D epoch selection, scores the held-out split again, re-captions the scenes, and exports a safetensors adapter that it reloads with verified parity — one seeded split of one corpus, no benchmark claim. BYOD (one zip of images plus `records.jsonl`) is optional and gated off by default. See `tutorials/README.md` for the registry and `docs/release-verification.md` for the release gate.
 
 ## Release status
 
