@@ -356,6 +356,64 @@ def validate_identity_consistency() -> None:
         _check(not stray, f"{name} cites an unexpected 40-hex revision: {stray}")
 
 
+# --- weight-facts check (fleet rollout 2026-09-24) ---
+# Every SHA-256 digest and byte count quoted in the weight prose must come from a committed
+# weights/*/dimer-base-manifest.json, or be declared below with a label saying what it describes
+# (dataset files, upstream files that are not staged, origin checkpoints, totals). Declared entries
+# that no document cites any more are rejected, so the allowlist cannot go stale.
+WEIGHT_DOCS = ("README.md", "MODEL_CARD.md", "docs/WEIGHTS.md")
+EXTERNAL_WEIGHT_BYTES: dict[int, str] = {
+    78_112_280: "blip adapter.safetensors for the default two blocks (57 tensors)",
+    392_245_504: "dataset mm-eval/VizWiz-Captions c4a6d89 data/val-00004-of-00005.parquet",
+    990_275_136: "Salesforce/blip-image-captioning-base 82a3776 tf_model.h5 (not staged, not loaded)",
+}
+EXTERNAL_WEIGHT_DIGESTS: dict[str, str] = {
+    "4492465a41d32b3c12b8b7b6a0cf7e0a0e202a5b825b006ca0c85dcdf24efd3e": "dataset mm-eval/VizWiz-Captions c4a6d89 data/val-00004-of-00005.parquet",
+    "9799ebb13cf6a7e7c76afdd180892e21499ecefff697212ce4e505c7fc207d6e": "text_digest of VizWiz val-00004 decoded text columns, 1,550 rows",
+    "d0aaa4c0e003f599d8baa53a9dee85af14eef20554cf2f8113a2673e25a59f8c": "Salesforce/blip-image-captioning-base 82a3776 tf_model.h5 (not staged, not loaded)",
+}
+_DIGEST = re.compile(r"(?<![0-9a-fA-F])[0-9a-f]{64}(?![0-9a-fA-F])")
+_GROUPED = r"(\d{1,3}(?:[,\u202f\u00a0 ]\d{3})+|\d+)"
+_BYTE_COUNT = re.compile(r"(?<![\d,\-])" + _GROUPED + r"\s*bytes\b|totalBytes`?\s*" + _GROUPED)
+
+
+def _manifest_facts(root: Path = ROOT) -> tuple[set[str], set[int]]:
+    digests: set[str] = set()
+    sizes: set[int] = set()
+    for path in sorted(root.glob("weights/*/dimer-base-manifest.json")):
+        manifest = json.loads(_read(path))
+        sizes.add(manifest["totalBytes"])
+        for entry in manifest["files"]:
+            digests.add(entry["sha256"])
+            sizes.add(entry["bytes"])
+    return digests, sizes
+
+
+def validate_weight_facts(root: Path = ROOT) -> None:
+    """Every SHA-256 and byte count quoted in the weight prose must come from a manifest or a labelled allowlist entry."""
+    digests, sizes = _manifest_facts(root)
+    _check(bool(digests), "no weights/*/dimer-base-manifest.json found to check weight facts against")
+    cited_digests: set[str] = set()
+    cited_sizes: set[int] = set()
+    for name in WEIGHT_DOCS:
+        path = root / name
+        if not path.exists():
+            continue
+        text = _read(path)
+        found_digests = set(_DIGEST.findall(text))
+        found_sizes = {int(re.sub(r"[,\u202f\u00a0 ]", "", m.group(1) or m.group(2))) for m in _BYTE_COUNT.finditer(text)}
+        cited_digests |= found_digests
+        cited_sizes |= found_sizes
+        bad_digests = sorted(found_digests - digests - set(EXTERNAL_WEIGHT_DIGESTS))
+        _check(not bad_digests, f"{name} cites SHA-256 digests absent from every manifest and from EXTERNAL_WEIGHT_DIGESTS: {bad_digests}")
+        bad_sizes = sorted(found_sizes - sizes - set(EXTERNAL_WEIGHT_BYTES))
+        _check(not bad_sizes, f"{name} cites byte counts absent from every manifest and from EXTERNAL_WEIGHT_BYTES: {bad_sizes}")
+    stale = sorted(set(EXTERNAL_WEIGHT_BYTES) - cited_sizes) + sorted(set(EXTERNAL_WEIGHT_DIGESTS) - cited_digests)
+    _check(not stale, f"EXTERNAL_WEIGHT_* entries no weight document cites any more: {stale}")
+
+
+# --- end weight-facts check ---
+
 def validate_release_status() -> None:
     """STATUS.md, README.md and tutorials/README.md must agree on one status token."""
     status = _read(ROOT / "STATUS.md")
@@ -614,9 +672,10 @@ def validate_notebooks() -> None:
 def validate_all() -> list[str]:
     validate_model_card()
     validate_identity_consistency()
+    validate_weight_facts()
     validate_release_status()
     validate_notebooks()
-    return ["model-card", "identity-consistency", "release-status", "notebook+parity"]
+    return ["model-card", "identity-consistency", "weight-facts", "release-status", "notebook+parity"]
 
 
 def main() -> int:
