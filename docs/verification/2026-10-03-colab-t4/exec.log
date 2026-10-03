@@ -1,0 +1,79 @@
+[colab] Parsing notebook '/home/kurt/colab-runs/blip-captioning-pipeline-2b8a77f-bf0eca/blip_captioning_colab_2b8a77f_colab-cli-t4.ipynb'...
+[colab] Executing cell 1/13 - Infrastructure: install the locked runtime into an isolated environment...
+{'isolated_environment': '/content/dimer_isolated_env', 'isolated_python': '3.12.12', 'kernel_python': '3.13.15', 'locked_packages': 48, 'setup_seconds': 55}
+[colab] Executing cell 2/13 - Route the remaining cells to the isolated environment...
+Every later code cell now runs in /content/dimer_isolated_env/bin/python (pid 1262).
+[colab] Executing cell 3/13 - blip_captioning-07...
+{'notebook_source': {'repository': 'blip-captioning-pipeline', 'repository_revision': 'd4231d16e49fdc2c419ccfb87b08f1cb246960da', 'embedded_module': 'src/blip_captioning_pipeline/pipeline.py', 'embedded_modules': ['src/blip_captioning_pipeline/pipeline.py', 'src/blip_captioning_pipeline/metrics.py', 'src/blip_captioning_pipeline/samples.py'], 'module_sha256': '111013403f60318c1bff1356d09e5890bc350dc7997cafaee56a0bad79e4b26f', 'generator': 'build_notebook.py/2.1', 'notebook_spec': '2.2'}, 'python': '3.12.12', 'torch': '2.14.0+cu130', 'transformers': '4.57.6', 'cuda': True}
+[colab] Executing cell 4/13 - blip_captioning-09...
+[colab] Executing cell 5/13 - blip_captioning-11...
+[colab] Executing cell 6/13 - blip_captioning-13...
+[colab] Executing cell 7/13 - blip_captioning-15...
+{'model_id': 'Salesforce/blip-image-captioning-base', 'revision': '82a37760796d32b1411fe092ab5d4e227313294b', 'license': 'bsd-3-clause', 'files': 8, 'total_bytes': 990775593}
+{'weights_dir': '/content/weights/blip-image-captioning-base', 'fetched': ['README.md', 'config.json', 'preprocessor_config.json', 'pytorch_model.bin', 'special_tokens_map.json', 'tokenizer.json', 'tokenizer_config.json', 'vocab.txt']}
+{'verified_files': 8, 'revision': '82a37760796d32b1411fe092ab5d4e227313294b'}
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+{'device': 'cuda:0', 'source': 'local-snapshot'}
+[colab] Executing cell 8/13 - blip_captioning-17...
+{'data_source': 'VizWiz-Captions VizWiz-Captions v1 (2020) as re-converted on the Hugging Face Hub, dataset revision c4a6d897 (CC BY 4.0 (Gurari et al. 2020; vizwiz.org/tasks-and-datasets/image-captioning))', 'raw_rows': {'annotations': 1550, 'photographs': 336, 'captioned': 318}, 'splits': {'train': 208, 'validation': 40, 'test': 70}, 'text_sha256': '9799ebb13cf6a7e7...', 'pinned_photographs': 336}
+{'train': {'n': 208, 'unique_images': 208, 'categories': {'text': 110, 'no-text': 98}, 'captions_per_image': {'min': 1, 'max': 5}, 'caption_words': {'min': 7, 'max': 58}, 'digest': '3bec1610ac8c9faf...'}}
+{'validation': {'n': 40, 'unique_images': 40, 'categories': {'no-text': 15, 'text': 25}, 'captions_per_image': {'min': 1, 'max': 5}, 'caption_words': {'min': 8, 'max': 42}, 'digest': 'f00752da09b6fb96...'}}
+{'test': {'n': 70, 'unique_images': 70, 'categories': {'no-text': 30, 'text': 40}, 'captions_per_image': {'min': 1, 'max': 5}, 'caption_words': {'min': 7, 'max': 33}, 'digest': '89f298822913dc68...'}}
+{'example': {'id': 'train-0000', 'image': '29705.jpg', 'size': [968, 1296], 'category': 'text', 'captions': ['An open book with words about math problems I think.', 'Part of a textbook or workbook with printed questions related to science and magnification that has no writing it in.', 'View of a page of a book that has text talking about magnification.', 'Part of a piece of white paper with black text, framing issues prevent reading the entire thing.', 'directions for viewing something under I microscope in black and white']}}
+{'probe': 'duplicate id', 'rejected': "duplicate id 'same'"}
+{'probe': 'missing image file', 'rejected': 'records[0]: image file not found: work/does-not-exist.jpg'}
+{'probe': 'empty caption list', 'rejected': 'records[0]: captions must be a list of at least 1 reference caption(s)'}
+{'probe': 'too small', 'rejected': '3 records; 8..5000 are required'}
+[colab] Executing cell 9/13 - blip_captioning-19...
+{'MIN_IMAGE_SIDE': 16, 'MAX_IMAGE_SIDE': 4096, 'IMAGE_SIZE': 384, 'MAX_PREFIX_CHARS': 128, 'MAX_NEW_TOKENS': 64, 'DEFAULT_MAX_NEW_TOKENS': 30, 'DECODING': 'greedy', 'MIN_RECORDS': 8, 'MAX_RECORDS': 5000, 'MIN_CAPTIONS': 1, 'MAX_CAPTION_CHARS': 500}
+{'scenes': ['synthetic_house_640x480.png', 'synthetic_beach_640x480.png', 'synthetic_fruit_480x480.png'], 'rgb_sha256': {'synthetic_house_640x480.png': 'f217010b24892234...', 'synthetic_beach_640x480.png': '3069e7856849a0d1...', 'synthetic_fruit_480x480.png': '7aa6fe00162db41e...'}, 'manifest_verdict': 'accepted', 'findings': 1}
+synthetic_house_640x480.png
+   caption: 'a red house with a tree and a ball'  (10 tokens)
+   keywords: {'house': True, 'tree': True, 'red': True}
+synthetic_beach_640x480.png
+   caption: 'a beach scene with a sail and a sun'  (10 tokens)
+   keywords: {'beach': True, 'sail': True, 'sun': True}
+synthetic_fruit_480x480.png
+   caption: 'a red and yellow apple on a white background'  (10 tokens)
+   keywords: {'apple': True, 'orange': False}
+{'checks': {'one_result_per_image': True, 'captions_are_text': True, 'budget_respected': True, 'setting_echoed': True}, 'frozen_scene_verdict': 'not-measurable', 'any_truncated': False}
+[colab] Executing cell 10/13 - blip_captioning-21...
+{'constant_caption_baseline': {'bleu4': 0.041, 'rouge_l': 0.336, 'cider_d': 0.052, 'unigram_f1': 0.385}, 'n': 70, 'caption': "constant caption 'A person is sitting on the inside of a dark area.'"}
+{'colour_neighbour_baseline': {'bleu4': 0.0, 'rouge_l': 0.227, 'cider_d': 0.042, 'unigram_f1': 0.251}, 'note': 'colour nearest neighbour (208 training images)'}
+{'frozen_model_test': {'bleu4': 0.213, 'rouge_l': 0.453, 'cider_d': 0.59, 'unigram_f1': 0.492}, 'mean_words': 8.9, 'n': 70, 'verdict': 'measured', 'adapted': False, 'seconds': 19.2}
+{'frozen_above_constant_caption': True}
+{'definitions': {'bleu4': 'corpus-level BLEU-4: geometric mean of clipped 1..4-gram precisions against all references, times the brevity penalty against the closest reference length; in 0..1', 'rouge_l': 'mean over images of the LCS-based F-measure (beta 1.2) against the best-matching reference; in 0..1', 'cider_d': 'mean over images of the CIDEr-D consensus score: TF-IDF-weighted 1..4-gram cosine similarity to the references with a Gaussian length penalty (sigma 6), clipped counts, scaled by 10; document frequencies from the references of the evaluated set; typically 0..~1.5 on VizWiz', 'unigram_f1': 'mean over images of the bag-of-words F1 against the best-matching reference; in 0..1'}}
+{'by_category': {'constant': {'no-text': {'n': 30, 'cider_d': 0.053}, 'text': {'n': 40, 'cider_d': 0.051}}, 'frozen': {'no-text': {'n': 30, 'cider_d': 0.525}, 'text': {'n': 40, 'cider_d': 0.638}}}}
+{'category': 'no-text', 'frozen': 'a close up of a laptop with a keyboard', 'references': ['Electronic sound system buttons and switches with a electric cord across it.', 'a device with different control and switch on it']}
+{'category': 'text', 'frozen': 'a computer keyboard with a keyboard sticker on it', 'references': ['I see a keyboard with a lot of numbers', 'Part of a computer keyboard is seen on a desk.']}
+{'category': 'no-text', 'frozen': 'a plate of meat sitting on a table', 'references': ['Round red object sitting on a brown plate', 'Seven red figs in a brown bowl on a table.']}
+[colab] Executing cell 11/13 - blip_captioning-23...
+{'epoch': 0, 'train_loss': None, 'val_bleu4': 0.194, 'val_rouge_l': 0.457, 'val_cider_d': 0.675, 'val_unigram_f1': 0.513, 'val_mean_words': 8.8, 'note': 'frozen model'}
+{'epoch': 1, 'train_loss': 3.7277, 'val_bleu4': 0.198, 'val_rouge_l': 0.467, 'val_cider_d': 0.699, 'val_unigram_f1': 0.509, 'val_mean_words': 9.6}
+{'epoch': 2, 'train_loss': 3.4698, 'val_bleu4': 0.151, 'val_rouge_l': 0.437, 'val_cider_d': 0.656, 'val_unigram_f1': 0.489, 'val_mean_words': 10.3}
+{'epoch': 3, 'train_loss': 3.2683, 'val_bleu4': 0.179, 'val_rouge_l': 0.443, 'val_cider_d': 0.709, 'val_unigram_f1': 0.492, 'val_mean_words': 11.2}
+{'epoch': 4, 'train_loss': 3.102, 'val_bleu4': 0.19, 'val_rouge_l': 0.445, 'val_cider_d': 0.716, 'val_unigram_f1': 0.493, 'val_mean_words': 11.4}
+{'trainable_parameters': 19526204, 'total_parameters': 223971644, 'training_pairs': 889, 'best_epoch': 4, 'selection': 'highest validation CIDEr-D', 'selection_split': 'validation', 'seconds': 118.0}
+[colab] Executing cell 12/13 - blip_captioning-25...
+{'bleu4': {'constant': 0.041, 'neighbour': 0.0, 'frozen': 0.213, 'adapted': 0.19}}
+{'rouge_l': {'constant': 0.336, 'neighbour': 0.227, 'frozen': 0.453, 'adapted': 0.439}}
+{'cider_d': {'constant': 0.052, 'neighbour': 0.042, 'frozen': 0.59, 'adapted': 0.629}}
+{'unigram_f1': {'constant': 0.385, 'neighbour': 0.251, 'frozen': 0.492, 'adapted': 0.49}}
+{'mean_words': {'constant': 11.0, 'neighbour': 12.2, 'frozen': 8.9, 'adapted': 11.2}}
+{'delta_vs_frozen': {'bleu4': -0.023, 'rouge_l': -0.014, 'cider_d': 0.039, 'unigram_f1': -0.002}}
+{'by_category': {'no-text': {'n': 30, 'constant': 0.053, 'frozen': 0.525, 'adapted': 0.615}, 'text': {'n': 40, 'constant': 0.051, 'frozen': 0.638, 'adapted': 0.639}}}
+{'category': 'no-text', 'frozen': 'a close up of a laptop with a keyboard', 'adapted': 'a black and white keyboard with a black keyboard key on it', 'references': ['Electronic sound system buttons and switches with a electric cord across it.', 'a device with different control and switch on it']}
+{'category': 'text', 'frozen': 'a computer keyboard with a keyboard sticker on it', 'adapted': 'a computer keyboard with a black and white keyboard on it', 'references': ['I see a keyboard with a lot of numbers', 'Part of a computer keyboard is seen on a desk.']}
+{'category': 'no-text', 'frozen': 'a plate of meat sitting on a table', 'adapted': 'a yellow bowl of ground beef on a black table with a gold mirror in the background', 'references': ['Round red object sitting on a brown plate', 'Seven red figs in a brown bowl on a table.']}
+{'best_epoch': 4, 'verdict': 'improved: the adapted test CIDEr-D is 0.039 above the frozen one (optimistic for the default settings, which were chosen on this split)'}
+run   data layers epochs       lr best  frozen adapted   delta
+  1 sample      2      4    1e-05    4   0.590   0.629   0.039
+{'report': 'outputs/blip_captioning_evaluation_report.json'}
+[colab] Executing cell 13/13 - blip_captioning-27...
+{'image': 'synthetic_house_640x480.png', 'frozen': 'a red house with a tree and a ball', 'adapted': 'a red house with a tree and a ball in the grass', 'keywords_after': {'house': True, 'tree': True, 'red': True}}
+{'image': 'synthetic_beach_640x480.png', 'frozen': 'a beach scene with a sail and a sun', 'adapted': 'a beach scene with a sail and a sun in the background', 'keywords_after': {'beach': True, 'sail': True, 'sun': True}}
+{'image': 'synthetic_fruit_480x480.png', 'frozen': 'a red and yellow apple on a white background', 'adapted': 'an apple and an orange on a white background', 'keywords_after': {'apple': True, 'orange': True}}
+{'artifact': 'outputs/blip_captioning_adapter', 'format': 'org.valcorza.blip-image-captioning-base.adapter.v1', 'tensors': 57, 'bytes': 78112280, 'sha256': '041a4640e9e12ee5...', 'best_epoch': 4}
+{'reload_parity': {'identical_captions': 8, 'of': 8}, 'reloaded_best_epoch': 4}
+['blip_captioning_adapter', 'blip_captioning_captions.csv', 'blip_captioning_evaluation_report.json', 'blip_captioning_input_manifest.json', 'blip_captioning_result.json', 'blip_captioning_train.jsonl']
+[colab] Saving notebook with outputs to '/home/kurt/colab-runs/blip-captioning-pipeline-2b8a77f-bf0eca/blip_captioning_colab_2b8a77f_colab-cli-t4_output.ipynb'...

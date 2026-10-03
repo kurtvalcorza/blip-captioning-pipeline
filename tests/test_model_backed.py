@@ -65,8 +65,9 @@ def _captions(pipe, records):
     return out
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def pipe():
+    # A fresh base per test: adapt() refuses an already-adapted pipeline (review CAP-M3).
     return BlipCaptioningPipeline.from_pretrained(device="cpu")
 
 
