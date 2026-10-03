@@ -1,6 +1,6 @@
 """Static release-asset validation for the BLIP image-captioning-base DIMER pipeline.
 
-Checks the STANDALONE tutorial notebook (DIMER Notebook Specification 2.0 §4), the tutorial
+Checks the STANDALONE tutorial notebook (DIMER Notebook Specification 2.2 §4), the tutorial
 registry, model card, README, STATUS.md and weight documentation for source conformance and
 cross-document identity consistency, and runs the generator parity checks (PAR1–PAR3).
 
@@ -46,7 +46,15 @@ CODE_MARKERS = (
     "image_paths = fetch_images(sorted(IMAGE_PINS), cache_dir='weights/vizwiz-captions')",
     "splits = build_sample_dataset(annotations, seed=SPLIT_SEED, image_paths=image_paths)",
     "records = load_byod_dataset(records_file)",
-    "dataset_manifests = {name: validate_dataset(part) for name, part in splits.items()}",
+    "dataset_manifests = {name: validate_dataset(part, min_records=MIN_RECORDS if name == 'train' else 1) for name, part in splits.items()}",
+    # CAP-M4 / CAP-m3: BYOD path field, upload guards, fresh upload folder, guarded zip with limits, records-file message
+    "BYOD_PATH = ''",
+    "if len(uploaded) != 1:",
+    "shutil.rmtree(byod_root)",
+    "if len(members) > MAX_ZIP_MEMBERS or expanded > MAX_ZIP_BYTES:",
+    "if target == base or not target.is_relative_to(base):",
+    "records_file = find_records_file(byod_root, file_name)",
+    "splits = split_dataset(records, seed=SPLIT_SEED, base_dir=records_file.parent)",
     "disjoint = check_split_disjoint(splits)",
     "write_dataset_jsonl(splits['train'], 'outputs/blip_captioning_train.jsonl')",
     # Stage 5: ceilings, the inference contract with its manifest, probe and sanity checks
@@ -63,7 +71,11 @@ CODE_MARKERS = (
     "baseline_neighbour = colour_neighbour_baseline(train_records, test_records)",
     "frozen_test = pipe.evaluate(test_records, max_new_tokens=CAPTION_MAX_TOKENS)",
     "scores = cider_d([predict(r) for r in records], [reference_captions(r) for r in records])",
-    "assert frozen_test['cider_d'] > baseline_constant['cider_d']",
+    # CAP-M3: Sections 5-7 start from the pretrained model; Section 6 refuses an adapted model
+    "def reset_to_pretrained():",
+    "    pipe = BlipCaptioningPipeline.from_pretrained(weights_dir=WEIGHTS_DIR)",
+    "if frozen_test['adapted']:",
+    "'frozen_above_constant_caption': frozen_test['cider_d'] > baseline_constant['cider_d']",
     # Stage 7: bounded fine-tuning with explicit hyperparameters
     "adapt_result = pipe.adapt(",
     "trainable_decoder_layers=TRAINABLE_DECODER_LAYERS",
@@ -72,17 +84,22 @@ CODE_MARKERS = (
     "adapted_test = pipe.evaluate(test_records, max_new_tokens=CAPTION_MAX_TOKENS)",
     "adapted_val = pipe.evaluate(val_records, max_new_tokens=CAPTION_MAX_TOKENS)",
     "'delta_vs_frozen'",
-    "assert adapted_test['cider_d'] > frozen_test['cider_d']",
+    # CAP-M2: a printed verdict (including a kept epoch 0) instead of a result-dependent assert; the run history
+    "if adapt_result['best_epoch'] == 0:",
+    "run_history = globals().get('run_history', [])",
+    "'default_hyperparameters_chosen_on': 'the test split",
     # Stage 9: the scenes re-captioned, artifact, reload parity, provenance
     "adapted_scene = evaluation_report(adapted_results, None, sample_kind='synthetic')",
     "writer.writerow(['image', 'frozen_caption', 'adapted_caption', 'adapted_new_tokens', 'expected_keywords'])",
     "pipe.save_artifact(artifact_dir, metadata=",
     "reloaded = BlipCaptioningPipeline.from_artifact(artifact_dir, weights_dir=WEIGHTS_DIR, device=pipe.device)",
-    "assert parity['identical_captions'] == parity['of']",
+    "raise RuntimeError(f'Reload parity failed: {parity}.",
     "weight_entry = next(entry for entry in MANIFEST['files'] if entry['path'] == WEIGHT_FILE)",
     "'weight_format': 'pytorch_model.bin pickle, digest-verified, weights_only=True'",
     "'hosted_tf_weight_file_not_loaded': HOSTED_TF_WEIGHT_FILE",
-    "'corpus': {'name': CORPUS_NAME, 'repo': CORPUS_REPO, 'revision': CORPUS_REVISION, 'release': CORPUS_RELEASE, 'license': CORPUS_LICENSE, 'text_columns': list(CORPUS_TEXT_COLUMNS), 'file': CORPUS_FILE, 'pinned_images': len(IMAGE_PINS)}",
+    "'corpus': None if USE_BYOD else {'name': CORPUS_NAME, 'repo': CORPUS_REPO, 'revision': CORPUS_REVISION, 'release': CORPUS_RELEASE, 'license': CORPUS_LICENSE, 'text_columns': list(CORPUS_TEXT_COLUMNS), 'file': CORPUS_FILE, 'pinned_images': len(IMAGE_PINS)}",
+    "'byod': byod,",
+    "'adaptation': {'best_epoch': adapt_result['best_epoch']",
     "'model_revision': MODEL_REVISION",
     "'model_license': MODEL_LICENSE",
     "transformers.__version__",
@@ -104,6 +121,38 @@ MARKDOWN_MARKERS = (
     "**no dispersion estimate**",
     "reading text in the image (BLIP is not an OCR model",
     "**Weight-format note:**",
+    "**selected, optimistic** number rather than independent evidence",
+    "**Optimistic estimate:**",
+)
+# Learner-facing text the review fixes removed; it must not come back (CAP-M1 restart/install text, CAP-M2 the claim
+# that the test split was unused for selection and the result assertion, CAP-M4 the wrong BYOD minimum and the stale
+# re-run instruction, CAP-m2 timings without an environment).
+STALE_MARKDOWN = (
+    "a dataset needs 8..5,000 records",
+    "installs the pinned dependencies",
+    "about fifteen minutes",
+    "the build record measured",
+    "The cell asserts the adapted CIDEr-D is above the frozen one",
+    "re-run from that cell",
+    "Restart the runtime, then rerun",
+    "the default is the configuration that gained on the held-out split",
+    "The test photographs were never used for training or epoch selection",
+)
+# The guided layer (NOTEBOOK_SPEC 2.2 §3.5, GDL1-GDL15; review CAP-M5): each marker with its minimum count.
+GUIDED_MARKERS = (
+    ("**Who this is for.**", 1),
+    ("**Input → Model → Output.**", 1),
+    ("**How to use this notebook.**", 1),
+    ("**Roadmap:**", 1),
+    ("**Predict before running:**", 6),
+    ("**What to notice:**", 6),
+    ("<summary>Check your reasoning</summary>", 7),
+    ("## 10. Your turn — change one thing", 1),
+    ("**Predict →", 0),
+    ("## Troubleshooting", 1),
+    ("## Glossary", 1),
+    ("## Conclusion (your notes)", 1),
+    ("> **Infrastructure.**", 3),
 )
 # Direct-library use that must stay inside the carried module cells (G2: the notebook calls the
 # pipeline API, it does not reimplement it). Checked on every code cell except the embedded ones.
@@ -132,10 +181,10 @@ FORBIDDEN_OUTSIDE_MODULE = (
 # ---------------------------------------------------------------------------
 # Shared checks. Everything below is source/structure validation only. Passing
 # these checks is NOT clean-runtime execution evidence under DIMER Notebook
-# Specification 2.0; see docs/release-verification.md for the release gate.
+# Specification 2.2; see docs/release-verification.md for the release gate.
 # ---------------------------------------------------------------------------
 
-NOTEBOOK_SPEC = "2.0"
+NOTEBOOK_SPEC = "2.2"
 ALLOWED_PROFILES = {"E2E", "ARTIFACT-INFERENCE", "TASK-INFERENCE", "MULTI-CAPABILITY", "SMOKE"}
 STATUS_TOKENS = ("Candidate", "Release-grade")
 PLACEHOLDER = re.compile(r"\b(TODO|TBD|FIXME)\b|Insert text here|Tooltip:", re.I)
@@ -629,8 +678,25 @@ def _validate_notebook_content(
     _check(not missing, f"{path.name}: missing required source markers: {missing}")
     present = [label for label, pattern in FORBIDDEN_PATTERNS if pattern.search(code)]
     _check(not present, f"{path.name}: forbidden/insecure source: {present}")
-    leaked = [marker for marker in FORBIDDEN_OUTSIDE_MODULE if marker in outside]
+    # The kernel install cell downloads the pinned uv wheel and verifies its size and SHA-256 (CAP-M1); it is the only
+    # cell outside the carried modules allowed to use urllib.request.
+    kernel = {index for index, source, _tree in code_cells if "# dimer: kernel cell" in source}
+    learner = "\n".join(text for index, text in stripped.items() if index not in embedded and index not in kernel)
+    kernel_raw = [source for index, source, _tree in code_cells if index in kernel]
+    leaked = [marker for marker in FORBIDDEN_OUTSIDE_MODULE if marker in learner]
+    leaked += [m for m in FORBIDDEN_OUTSIDE_MODULE if m != "urllib.request" and any(m in _strip_comments(k) for k in kernel_raw)]
     _check(not leaked, f"{path.name}: direct library use outside the carried module cell (G2): {leaked}")
+    _check(len(kernel) == 2, f"{path.name}: exactly two kernel cells (isolated install and router) are expected (CAP-M1)")
+    install = next((k for k in kernel_raw if "LOCK_TEXT = r" in k), "")
+    for needed in ("'--managed-python'", "'--require-hashes'", "'--only-binary'", "':all:'", "UV_SHA256", "LOCK_SHA256", "platform.machine() != 'x86_64'"):
+        _check(needed.replace("'", '"') in install, f"{path.name}: the isolated install cell must use {needed} (CAP-M1)")
+    _check("_ip.input_transformers_cleanup.append(_route_to_isolated_runtime)" in "\n".join(kernel_raw), f"{path.name}: later cells must be routed to the isolated environment (CAP-M1)")
+    stale = [marker for marker in STALE_MARKDOWN if marker in markdown]
+    _check(not stale, f"{path.name}: stale learner-facing text: {stale}")
+    _check("{{" not in markdown and "}}" not in markdown, f"{path.name}: markdown must not show doubled braces (CAP-m1)")
+    _check("\nassert " not in "\n" + learner, f"{path.name}: learner cells must not use a bare assert (CAP-M2)")
+    short = [(marker, markdown.count(marker), least) for marker, least in GUIDED_MARKERS if markdown.count(marker) < max(least, 1)]
+    _check(not short, f"{path.name}: guided layer incomplete (marker, found, needed): {short}")
     _check(
         f"pipe = {MODEL_LOAD_EXPR}" in outside,
         f"{path.name}: must load through {MODEL_LOAD_EXPR} (INF1)",
