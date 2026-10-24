@@ -95,7 +95,7 @@ CODE_MARKERS = (
     "reloaded = BlipCaptioningPipeline.from_artifact(artifact_dir, weights_dir=WEIGHTS_DIR, device=pipe.device)",
     "raise RuntimeError(f'Reload parity failed: {parity}.",
     "weight_entry = next(entry for entry in MANIFEST['files'] if entry['path'] == WEIGHT_FILE)",
-    "'weight_format': 'pytorch_model.bin pickle, digest-verified, weights_only=True'",
+    "'weight_format': 'safetensors conversion of the digest-verified pytorch_model.bin, pinned SHA-256, strict load'",
     "'hosted_tf_weight_file_not_loaded': HOSTED_TF_WEIGHT_FILE",
     "'corpus': None if USE_BYOD else {'name': CORPUS_NAME, 'repo': CORPUS_REPO, 'revision': CORPUS_REVISION, 'release': CORPUS_RELEASE, 'license': CORPUS_LICENSE, 'text_columns': list(CORPUS_TEXT_COLUMNS), 'file': CORPUS_FILE, 'pinned_images': len(IMAGE_PINS)}",
     "'byod': byod,",
@@ -415,11 +415,13 @@ EXTERNAL_WEIGHT_BYTES: dict[int, str] = {
     78_112_280: "blip adapter.safetensors for the default two blocks (57 tensors)",
     392_245_504: "dataset mm-eval/VizWiz-Captions c4a6d89 data/val-00004-of-00005.parquet",
     990_275_136: "Salesforce/blip-image-captioning-base 82a3776 tf_model.h5 (not staged, not loaded)",
+    895947208: "safetensors conversion of pytorch_model.bin (served file, written by convert_checkpoint)",
 }
 EXTERNAL_WEIGHT_DIGESTS: dict[str, str] = {
     "4492465a41d32b3c12b8b7b6a0cf7e0a0e202a5b825b006ca0c85dcdf24efd3e": "dataset mm-eval/VizWiz-Captions c4a6d89 data/val-00004-of-00005.parquet",
     "9799ebb13cf6a7e7c76afdd180892e21499ecefff697212ce4e505c7fc207d6e": "text_digest of VizWiz val-00004 decoded text columns, 1,550 rows",
     "d0aaa4c0e003f599d8baa53a9dee85af14eef20554cf2f8113a2673e25a59f8c": "Salesforce/blip-image-captioning-base 82a3776 tf_model.h5 (not staged, not loaded)",
+    "6586e1cbdea87452fef7bef0230277f38d0519a81fa724d804e2d01999fd16b3": "safetensors conversion of pytorch_model.bin (CONVERTED_SHA256, the served file)",
 }
 _DIGEST = re.compile(r"(?<![0-9a-fA-F])[0-9a-f]{64}(?![0-9a-fA-F])")
 _GROUPED = r"(\d{1,3}(?:[,\u202f\u00a0 ]\d{3})+|\d+)"

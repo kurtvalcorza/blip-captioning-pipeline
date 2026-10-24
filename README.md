@@ -2,7 +2,7 @@
 
 DIMER inference and fine-tuning wrapper for **BLIP fine-tuned on COCO Captions** (`Salesforce/blip-image-captioning-base`), Salesforce's 224M-parameter vision-language model (ViT-B/16 image encoder at 384×384 and a BERT-style text decoder cross-attending to the image features) that describes an image in one generated English sentence, optionally continuing a prefix you supply — pinned to an immutable Hugging Face revision and loaded only from a digest-verified local snapshot. The pipeline accepts one image and an optional prefix, decodes greedily under a caller-owned token budget, and returns the caption string with a `truncated` flag; it returns no score and no location. It also carries a bounded adaptation contract: `adapt` fine-tunes the caption decoder's last blocks and head on a validated `{id, image, captions}` dataset, `evaluate` scores a held-out split with BLEU-4, ROUGE-L, CIDEr-D and unigram F1 beside two non-neural baselines, and `save_artifact` / `from_artifact` export and reload the trained tensors as a safetensors adapter bound to the pinned base.
 
-**Weight format.** Upstream hosts no SafeTensors at the pinned revision. This package executes the digest-pinned `pytorch_model.bin` (a pickle, deserialised with `weights_only=True` only after its SHA-256 matched the manifest); the `tf_model.h5` upstream also hosts is the DIMER upload artifact (DIMER does not accept `.bin`) and is never loaded here. Both digests are recorded in `docs/WEIGHTS.md` and `MODEL_CARD.md`.
+**Weight format.** Upstream hosts no SafeTensors at the pinned revision. This package reads the digest-pinned `pytorch_model.bin` (a pickle) once, with `weights_only=True` and only after its SHA-256 matched the manifest, to write the safetensors conversion `model.converted.safetensors` (SHA-256 `6586e1cbdea8…`, pinned), and serves the model only from that file; the `tf_model.h5` upstream also hosts is the DIMER upload artifact (DIMER does not accept `.bin`) and is never loaded here. Both digests are recorded in `docs/WEIGHTS.md` and `MODEL_CARD.md`.
 
 ## Upstream alignment
 
@@ -47,7 +47,8 @@ weights/blip-image-captioning-base/
   config.json                # BlipForConditionalGeneration: ViT-B/16 @ 384 + 12-layer text decoder (vocab 30524)
   preprocessor_config.json   # BlipImageProcessor: resize 384x384, CLIP mean/std
   special_tokens_map.json  tokenizer.json  tokenizer_config.json  vocab.txt
-  pytorch_model.bin          # git-ignored, 989,820,849 bytes — the executed artifact (pickle, digest-checked)
+  pytorch_model.bin          # git-ignored, 989,820,849 bytes — the pickle source (digest-checked), read once to convert
+  model.converted.safetensors  # git-ignored, 895,947,208 bytes — the served file (SHA-256 6586e1cbdea8…)
   README.md
 ```
 
