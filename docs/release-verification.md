@@ -1,5 +1,7 @@
 # Release verification
 
+**Pending hosted run (REL14).** On 2026-10-24 the notebook `tutorials/blip_captioning_colab.ipynb` was regenerated from code `83f7876` (blob `22b527bc97ec`, 2026-10-24) so that the model is served from the pinned safetensors conversion `model.converted.safetensors` (SHA-256 `6586e1cbdea8…`) instead of the pickle checkpoint; no hosted run of this blob is recorded yet, so it is Candidate until one is (REL14). The runs recorded below are history for earlier blobs and are not evidence for this one.
+
 `tutorials/blip_captioning_colab.ipynb` (`E2E`, **standalone** carrier) is a **release candidate** until the
 exact notebook revision has executed top-to-bottom, in one pass, in a clean supported runtime. Unit tests, JSON
 validation, code-cell compilation, the generator parity checks and `tools/validate_release_assets.py` are necessary
