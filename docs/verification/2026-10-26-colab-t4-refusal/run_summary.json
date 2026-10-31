@@ -1,0 +1,72 @@
+{
+  "repo": "blip-captioning-pipeline",
+  "sha": "67aa5e2d175301d26db1adbbcba731b18a8ab18f",
+  "notebook": "tutorials/blip_captioning_colab.ipynb",
+  "blob": "e4805a26ca983d7f916fecd609d90125d5961f25",
+  "gpu": "T4",
+  "session": "suite-blip-67aa5e2-bf0e",
+  "started_utc": "2026-10-26T17:56:29+00:00",
+  "runner": "Colab CLI `colab exec -f` on a fresh session (not a browser Run all)",
+  "overrides": [
+    {
+      "name": "USE_BYOD",
+      "from": "False",
+      "to": "True"
+    },
+    {
+      "name": "BYOD_PATH",
+      "from": "''",
+      "to": "'/content/sample_data'"
+    }
+  ],
+  "run_copy_blob": "ac3170ac11448a3fc2733a74dbf17a284f2db935",
+  "run_copy_sha256": "b03a7e380b8ca1f49e8ccb3fb149171b22e8a963194a60b047114c77b3f42fd9",
+  "run_copy_note": "refusal run: the run copy is the committed notebook with the listed assignment overrides, cut immediately after the refusal cell and re-serialised (nbformat layout); input_unchanged compares against that copy",
+  "truncated_after_cell": "blip_captioning-17",
+  "refusal_cell_ref": "blip_captioning-17",
+  "refusal_cell_index": 8,
+  "cells_dropped": 11,
+  "code_cells_dropped": 5,
+  "original_sha256": "926ae446583ea0bb7151b3ead84ad6880cb2d07cc3e3b0746818201b141bd500",
+  "status": "[suite-blip-67aa5e2-bf0e] gpu-t4-s-kkb-usw4b2-1fptwo80mkj9e | Hardware: T4 | Shape: Standard | Variant: GPU | Status: IDLE",
+  "exec_exit_code": 0,
+  "stopped": true,
+  "stop_verified": true,
+  "wall_s": 130.0,
+  "input_unchanged": true,
+  "executed_file": "blip_captioning_colab_67aa5e2_colab-cli-t4_output.ipynb",
+  "log_cells": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "log_total": 8,
+  "code_cells": 8,
+  "executed_cells": 5,
+  "errors": [
+    {
+      "cell": "blip_captioning-17",
+      "ename": "IsolatedCellRefusal",
+      "evalue": "sample_data: No records.jsonl or records.json found in /content/sample_data. Put one records file of {id, image, captions} objects beside the images (image paths relative to it), then run this cell again. Fix the file, then select this cell and choose Runtime \u2192 Run after."
+    }
+  ],
+  "execution_counts": [],
+  "sequential": null,
+  "executed_sha256": "0db0fdd19a293b761af821f357e44fae9cc56c2b372767bff0829e24d2fff4b6",
+  "log_sequential_complete": true,
+  "mode": "expect_refusal",
+  "refusal_line": "Refused: sample_data: No records.jsonl or records.json found in /content/sample_data. Put one records file of {id, image, captions} objects beside the images (image paths relative to it), then run this cell again. Fix the file, then select this cell and choose Runtime \u2192 Run after.",
+  "halting_cell_index": 8,
+  "halting_cell_id": "blip_captioning-17",
+  "error_cells": [
+    8
+  ],
+  "refusal_fail_reasons": [],
+  "refusal_ok": true,
+  "verdict": "PASS"
+}
