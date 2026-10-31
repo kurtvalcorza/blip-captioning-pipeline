@@ -123,6 +123,83 @@ BAD_NAME, BAD_BYTES, BAD_RULE, DISCARDED = "hostname", b"runtime\n", "BYOD_PATH 
 _UNUSED = types
 
 
+# ---- the catch is narrow: only bad input is refused; an internal TypeError/OSError keeps its traceback ------------
+
+
+def test_the_byod_catch_is_narrow_in_the_notebook_source():
+    src = CELLS[SEC4].split("write_dataset_jsonl(", 1)[0]  # the BYOD try block; the probes below it are a separate demo
+    assert "except (TypeError" not in src and "except TypeError" not in src
+    assert "\nexcept ValueError as exc:\n    if not USE_BYOD:\n        raise" in src
+    assert src.count("except (OSError, zipfile.BadZipFile) as exc:") == 2 and src.count("except OSError as exc:") == 1
+    assert "                try:\n                    payload = source.read_bytes()\n                    extract_zip(payload, byod_root, file_name)\n                except (OSError, zipfile.BadZipFile) as exc:\n" in src
+    assert "            try:\n                extract_zip(payload, byod_root, file_name)\n            except (OSError, zipfile.BadZipFile) as exc:\n" in src
+    assert "        try:\n            records = load_byod_dataset(records_file)\n        except OSError as exc:\n" in src
+
+
+def test_a_corrupt_zip_member_is_still_one_refused_line(monkeypatch, tmp_path):
+    monkeypatch.delitem(sys.modules, "google.colab", raising=False)
+    payload = bytearray(_zip(tmp_path, "crc", 12))
+    at = payload.index(b'{"id": "r000"') + 3  # inside the stored records.jsonl: its CRC-32 no longer matches
+    payload[at] ^= 0x01
+    (tmp_path / "crc.zip").write_bytes(bytes(payload))
+    line = _refusal(monkeypatch, tmp_path, byod_path=str(tmp_path / "crc.zip"))
+    assert line.startswith("Refused: crc.zip: the zip cannot be read (BadZipFile: "), line
+
+
+def test_an_unreadable_records_file_is_still_one_refused_line(monkeypatch, tmp_path):
+    monkeypatch.delitem(sys.modules, "google.colab", raising=False)
+    folder = tmp_path / "folder"
+    records = _records(folder, 12)
+    (folder / "records.jsonl").write_text("\n".join(json.dumps(r) for r in records), encoding="utf-8")
+
+    def unreadable(path):
+        raise PermissionError(13, "Permission denied", str(path))
+
+    monkeypatch.setattr(pkg, "load_byod_dataset", unreadable)
+    line = _refusal(monkeypatch, tmp_path, byod_path=str(folder))
+    assert line.startswith("Refused: folder: the file cannot be read (PermissionError: "), line
+    assert line.endswith("Fix the file, then select this cell and choose Runtime → Run after."), line
+
+
+@pytest.mark.parametrize("error", [TypeError("internal helper bug"), OSError("internal I/O bug")], ids=["TypeError", "OSError"])
+def test_an_internal_error_after_the_loader_keeps_its_traceback(monkeypatch, tmp_path, error):
+    import traceback
+
+    monkeypatch.delitem(sys.modules, "google.colab", raising=False)
+    folder = tmp_path / "folder"
+    records = _records(folder, 12)
+    (folder / "records.jsonl").write_text("\n".join(json.dumps(r) for r in records), encoding="utf-8")
+    (tmp_path / "outputs").mkdir()
+    earlier = tmp_path / "outputs" / f"{STEM}_train.jsonl"
+    earlier.write_text("earlier run\n", encoding="utf-8")
+
+    def broken_disjoint(splits):
+        raise error
+
+    monkeypatch.setattr(pkg, "check_split_disjoint", broken_disjoint)
+    with pytest.raises(type(error)) as info:
+        _section4(monkeypatch, tmp_path, byod_path=str(folder))
+    assert info.value is error and not getattr(info.value, "dimer_refusal", False)
+    rendered = "".join(traceback.format_exception(info.value))
+    assert rendered.startswith("Traceback") and "broken_disjoint" in rendered and "Refused:" not in rendered
+    assert earlier.read_text(encoding="utf-8") == "earlier run\n"  # nothing is cleared for an internal error
+
+
+def test_a_typeerror_inside_the_loader_is_not_turned_into_a_refusal(monkeypatch, tmp_path):
+    monkeypatch.delitem(sys.modules, "google.colab", raising=False)
+    folder = tmp_path / "folder"
+    _records(folder, 12)
+    (folder / "records.jsonl").write_text("{}\n", encoding="utf-8")
+
+    def buggy_loader(path):
+        raise TypeError("loader bug")
+
+    monkeypatch.setattr(pkg, "load_byod_dataset", buggy_loader)
+    with pytest.raises(TypeError, match="loader bug") as info:
+        _section4(monkeypatch, tmp_path, byod_path=str(folder))
+    assert not getattr(info.value, "dimer_refusal", False)
+
+
 # ---- the router: a refusal crosses the worker boundary as one line; a genuine error keeps its traceback -----
 
 
